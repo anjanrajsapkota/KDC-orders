@@ -1,0 +1,27 @@
+name: Fetch daily cause list
+
+on:
+  schedule:
+    # Runs at 01:15 UTC = 07:00 Nepal time every day
+    - cron: '15 1 * * *'
+  workflow_dispatch:   # lets you trigger manually
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch cause list
+        run: |
+          # Nepali date for today (approximate; offset +56 years 8.5 months)
+          NEP_DATE=$(TZ=Asia/Kathmandu date -d "+56 years +8 months +17 days" +%Y%m%d)
+          echo "Fetching: $NEP_DATE"
+          curl -sL "https://supremecourt.gov.np/weekly_dainik/pesi/daily/39" \
+               -o latest.html
+      - name: Commit and push
+        run: |
+          git config user.name  "auto-bot"
+          git config user.email "auto-bot@users.noreply.github.com"
+          git add latest.html
+          git diff --staged --quiet || git commit -m "update cause list"
+          git push
