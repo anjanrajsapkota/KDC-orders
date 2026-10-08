@@ -23,10 +23,10 @@
   .step{display:inline-grid;place-items:center;width:24px;height:24px;
         background:var(--maroon);color:#fff;border-radius:7px;font-size:.75rem}
   .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-  input[type=text],select,textarea{
+  select,textarea{
     font:inherit;padding:9px 11px;border:1px solid #cfc6ba;border-radius:9px;
-    background:#fff;min-height:40px;color:var(--ink);outline:0;width:100%}
-  input:focus,select:focus,textarea:focus{border-color:var(--gold);
+    background:#fff;min-height:44px;color:var(--ink);outline:0;width:100%}
+  select:focus,textarea:focus{border-color:var(--gold);
     box-shadow:0 0 0 3px rgba(197,145,50,.15)}
   textarea{min-height:170px;font-family:Consolas,monospace;font-size:.82rem}
   button{font:inherit;cursor:pointer;padding:10px 14px;border-radius:9px;
@@ -36,15 +36,16 @@
   .btn-primary{background:linear-gradient(180deg,#8d2a38,var(--maroon));
     color:#fff;border-color:var(--maroon);box-shadow:0 6px 16px rgba(123,31,43,.2)}
   .btn-gold{background:#f6d98e;color:#3b2910;border-color:#f6d98e}
-  .btn-word{background:#2b579a;color:#fff;border-color:#2b579a}
+  .btn-word{background:#2b579a;color:#fff;border-color:#2b579a;
+            font-size:1rem;padding:14px 22px;min-height:52px;
+            box-shadow:0 8px 20px rgba(43,87,154,.28)}
+  .btn-word:hover{background:#1e4276;border-color:#1e4276}
   .status{font-size:.82rem;color:var(--muted);margin-top:8px;min-height:20px;
           line-height:1.6}
   .status.ok{color:#177245}
   .status.err{color:#b42318}
   .hint{font-size:.76rem;color:var(--muted);line-height:1.6;margin:6px 0 0}
   .hint a{color:var(--maroon);font-weight:700}
-  .grid{display:grid;grid-template-columns:auto 1fr;gap:8px 12px;align-items:center}
-  .grid label{font-size:.82rem;font-weight:700}
   #output{display:grid;gap:14px}
   .order{background:#fff;border:1px solid #cfc6ba;border-radius:10px;
          padding:24px 28px;line-height:1.9;font-size:.95rem;page-break-after:always}
@@ -56,26 +57,29 @@
                border:1px dashed #cfc6ba;border-radius:8px;color:var(--muted)}
   .order .right{float:right;font-weight:700}
   .order .small{font-size:.85rem;color:var(--muted)}
-  .toolbar{position:sticky;bottom:0;background:var(--canvas);padding:10px 0;
-           display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid var(--line);margin-top:14px}
+  .word-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;
+            margin-top:10px;padding:14px;background:#eaf1fb;
+            border:1px solid #c9dbf5;border-radius:12px}
+  .word-bar .msg{flex:1;min-width:200px;color:#1e4276;font-weight:700;font-size:.9rem}
+  .word-bar .sub{display:block;margin-top:2px;color:#43597a;
+                 font-weight:500;font-size:.76rem}
   .fallback{border:1px dashed #c59132;background:#fffaf0;border-radius:10px;
             padding:12px;margin-top:12px}
   .fallback h3{margin:0 0 6px;color:#8a6a1f;font-size:.9rem}
   .fallback p{margin:0 0 8px;font-size:.78rem;color:#665a41;line-height:1.6}
   @media print{
-    header,.panel,.toolbar,.hint,.status,.fallback{display:none!important}
+    header,.panel,.hint,.status,.fallback,.word-bar{display:none!important}
     body{background:#fff}
     main{padding:0;max-width:none}
     .order{border:0;padding:20px 0}
   }
-  @media (max-width:620px){ .grid{grid-template-columns:1fr} }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/nepali-date-converter@3.4.0/dist/nepali-date-converter.umd.js"></script>
 </head>
 <body>
 <header>
   <h1>आदेश फर्म्याट जेनेरेटर</h1>
-  <p>स्वतः आजको पेशी सूची ल्याउँछ। न्यायाधीश छान्नुहोस् — बाँकी सबै स्वतः।</p>
+  <p>स्वतः आजको पेशी सूची ल्याउँछ। न्यायाधीश छान्नुहोस् — आदेशहरू स्वतः तयार हुन्छन्।</p>
   <span class="date-pill" id="todayPill">आजको मिति हेर्दैछु…</span>
 </header>
 <main>
@@ -107,29 +111,28 @@
 
   <section class="panel" id="step2">
     <h2><span class="step">२</span> न्यायाधीश छान्नुहोस्</h2>
-    <div class="grid">
-      <label for="judgeSelect">न्यायाधीश</label>
-      <select id="judgeSelect" disabled><option value="">पेशी सूची पर्खँदै…</option></select>
-    </div>
-    <div class="row" style="margin-top:12px">
-      <button class="btn-primary" id="generateBtn" disabled>आदेश फर्म्याट बनाउनुहोस्</button>
-    </div>
+    <select id="judgeSelect" disabled><option value="">पेशी सूची पर्खँदै…</option></select>
     <p class="status" id="genStatus"></p>
   </section>
 
   <section class="panel" id="step3" hidden>
     <h2><span class="step">३</span> नतिजा</h2>
     <p class="hint" id="countText"></p>
+    <div class="word-bar" id="wordBar" hidden>
+      <button class="btn-word" onclick="downloadWord()">⬇ Word फाइल डाउनलोड</button>
+      <div class="msg">
+        आदेशहरू तयार छन्।
+        <span class="sub">Word डाउनलोड गरेपछि Microsoft Word मा खुल्छ — प्रिन्ट गर्न वा सम्पादन गर्न सकिन्छ।</span>
+      </div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn-gold" onclick="window.print()">🖨 प्रिन्ट</button>
+      <button onclick="downloadHtml()">⬇ HTML</button>
+      <button onclick="copyAll()">📋 सबै copy</button>
+    </div>
   </section>
 
   <section id="output" aria-live="polite"></section>
-
-  <div class="toolbar" id="toolbar" hidden>
-    <button class="btn-word" onclick="downloadWord()">⬇ Word डाउनलोड</button>
-    <button class="btn-gold" onclick="window.print()">🖨 प्रिन्ट</button>
-    <button onclick="downloadHtml()">⬇ HTML</button>
-    <button onclick="copyAll()">📋 सबै copy</button>
-  </div>
 </main>
 
 <script>
@@ -141,7 +144,6 @@ const clean   = s => String(s||'').replace(/[\u200B-\u200D\uFEFF]/g,'').replace(
                           .replace(/\s+/g,' ').trim();
 const BS = ['बैशाख','जेठ','असार','साउन','भदौ','असोज',
             'कात्तिक','मंसिर','पुस','माघ','फागुन','चैत'];
-const API = 'data/latest.html';
 
 function stripRegNo(s){
   return String(s||'').replace(/\s*[\(（][^)）]*[\)）]\s*$/,'').trim();
@@ -219,7 +221,6 @@ function parseCauseList(html){
       subject:   find('विषय'),
       plaintiff: find('वादी'),
       defendant: find('प्रतिवादी'),
-      remark:    find('कैफियत'),
     };
     let lastSerial = '';
     for (let i=hIdx+1;i<rows.length;i++){
@@ -234,7 +235,6 @@ function parseCauseList(html){
         subject:   col.subject>=0   ? cells[col.subject]   : '',
         plaintiff: col.plaintiff>=0 ? cells[col.plaintiff] : '',
         defendant: col.defendant>=0 ? cells[col.defendant] : '',
-        remark:    col.remark>=0    ? cells[col.remark]    : '',
       });
     }
   }
@@ -269,6 +269,12 @@ function render(){
   const judge = $('judgeSelect').value;
   const out   = $('output');
   out.innerHTML = '';
+  $('wordBar').hidden = true;
+
+  if (!judge){
+    $('step3').hidden = true;
+    return;
+  }
   const benches = state.benches.filter(b => b.judge === judge);
   if (!benches.length){
     $('genStatus').textContent = 'छानिएको न्यायाधीशको इजलास भेटिएन।';
@@ -283,13 +289,14 @@ function render(){
     }
   }
   $('countText').textContent =
-    `${judge} · ${toNep(shown)} मुद्दाको आदेश फर्म्याट तयार। Word डाउनलोड थिचेर सेभ गर्नुहोस्।`;
+    `${judge} · ${toNep(shown)} मुद्दाको आदेश फर्म्याट तयार।`;
   $('step3').hidden = false;
-  $('toolbar').hidden = shown === 0;
+  $('wordBar').hidden = shown === 0;
   $('genStatus').textContent = '';
+  $('genStatus').className = 'status';
+  $('step3').scrollIntoView({behavior:'smooth', block:'start'});
 }
 
-/* -------- Word (.doc) download -------- */
 function downloadWord(){
   const docCss = `
     @page { size: A4; margin: 1.5cm; }
@@ -351,6 +358,10 @@ function loadHtml(html){
     if (!state.benches.length) throw new Error('यो HTML मा न्यायाधीश/इजलास भेटिएन।');
     const sel = $('judgeSelect');
     sel.replaceChildren();
+    const prompt = document.createElement('option');
+    prompt.value = '';
+    prompt.textContent = '— न्यायाधीश रोज्नुहोस् —';
+    sel.appendChild(prompt);
     state.benches.forEach(b => {
       const o = document.createElement('option');
       o.value = b.judge;
@@ -358,13 +369,11 @@ function loadHtml(html){
       sel.appendChild(o);
     });
     sel.disabled = false;
-    $('generateBtn').disabled = false;
     const total = state.benches.reduce((n,b)=>n+b.rows.length,0);
     $('loadStatus').textContent =
       `${prettyDate(state.date) || '—'} · ${state.benches.length} इजलास · ${toNep(total)} मुद्दा लोड भयो।`;
     $('loadStatus').className = 'status ok';
     $('output').innerHTML = '';
-    $('toolbar').hidden = true;
     $('step3').hidden = true;
     $('fallbackBox').hidden = true;
   } catch (e){
@@ -418,7 +427,7 @@ $('fileInput').onchange = async e => {
   const f = e.target.files[0]; if (!f) return;
   loadHtml(await f.text());
 };
-$('generateBtn').onclick = render;
+$('judgeSelect').onchange = render;
 
 loadToday();
 </script>
