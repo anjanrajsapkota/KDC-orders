@@ -387,7 +387,6 @@ async function loadToday(){
   $('loadStatus').className = 'status err';
   $('fallbackBox').hidden = false;
 }
-}
 
 $('reloadBtn').onclick = loadToday;
 $('toggleFallback').onclick = () => { $('fallbackBox').hidden = !$('fallbackBox').hidden; };
