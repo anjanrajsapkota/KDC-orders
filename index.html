@@ -36,13 +36,14 @@
   .btn-primary{background:linear-gradient(180deg,#8d2a38,var(--maroon));
     color:#fff;border-color:var(--maroon);box-shadow:0 6px 16px rgba(123,31,43,.2)}
   .btn-gold{background:#f6d98e;color:#3b2910;border-color:#f6d98e}
+  .btn-word{background:#2b579a;color:#fff;border-color:#2b579a}
   .status{font-size:.82rem;color:var(--muted);margin-top:8px;min-height:20px;
           line-height:1.6}
   .status.ok{color:#177245}
   .status.err{color:#b42318}
   .hint{font-size:.76rem;color:var(--muted);line-height:1.6;margin:6px 0 0}
   .hint a{color:var(--maroon);font-weight:700}
-  .grid{display:grid;grid-template-columns:auto 1fr auto 1fr;gap:8px 12px;align-items:center}
+  .grid{display:grid;grid-template-columns:auto 1fr;gap:8px 12px;align-items:center}
   .grid label{font-size:.82rem;font-weight:700}
   #output{display:grid;gap:14px}
   .order{background:#fff;border:1px solid #cfc6ba;border-radius:10px;
@@ -74,7 +75,7 @@
 <body>
 <header>
   <h1>आदेश फर्म्याट जेनेरेटर</h1>
-  <p>स्वतः आजको पेशी सूची ल्याउँछ। तपाईं न्यायाधीश छान्नुहोस् — बाँकी सबै स्वतः।</p>
+  <p>स्वतः आजको पेशी सूची ल्याउँछ। न्यायाधीश छान्नुहोस् — बाँकी सबै स्वतः।</p>
   <span class="date-pill" id="todayPill">आजको मिति हेर्दैछु…</span>
 </header>
 <main>
@@ -105,21 +106,12 @@
   </section>
 
   <section class="panel" id="step2">
-    <h2><span class="step">२</span> न्यायाधीश र विकल्प</h2>
+    <h2><span class="step">२</span> न्यायाधीश छान्नुहोस्</h2>
     <div class="grid">
       <label for="judgeSelect">न्यायाधीश</label>
       <select id="judgeSelect" disabled><option value="">पेशी सूची पर्खँदै…</option></select>
-      <label for="benchInput">इजलास नं.</label>
-      <input type="text" id="benchInput" placeholder="ऐच्छिक">
-      <label for="branchInput">शाखा अधिकृत</label>
-      <input type="text" id="branchInput" placeholder="ऐच्छिक">
-      <label for="operatorInput">कम्प्युटर अपरेटर</label>
-      <input type="text" id="operatorInput" placeholder="ऐच्छिक">
     </div>
-    <div class="row" style="margin-top:10px">
-      <label style="display:flex;gap:6px;align-items:center;font-size:.82rem">
-        <input type="checkbox" id="skipHeld"> ‘हेर्न नभ्याइने / स्थगित’ भएका मुद्दा छोड्ने
-      </label>
+    <div class="row" style="margin-top:12px">
       <button class="btn-primary" id="generateBtn" disabled>आदेश फर्म्याट बनाउनुहोस्</button>
     </div>
     <p class="status" id="genStatus"></p>
@@ -133,8 +125,9 @@
   <section id="output" aria-live="polite"></section>
 
   <div class="toolbar" id="toolbar" hidden>
-    <button class="btn-gold" onclick="window.print()">🖨 प्रिन्ट गर्नुहोस्</button>
-    <button onclick="downloadHtml()">⬇ HTML डाउनलोड</button>
+    <button class="btn-word" onclick="downloadWord()">⬇ Word डाउनलोड</button>
+    <button class="btn-gold" onclick="window.print()">🖨 प्रिन्ट</button>
+    <button onclick="downloadHtml()">⬇ HTML</button>
     <button onclick="copyAll()">📋 सबै copy</button>
   </div>
 </main>
@@ -254,11 +247,6 @@ function orderSheet(bench, row){
   const dateLine = state.date && state.date.length === 8
     ? `इति संवत् ${toNep(y)} साल ${month} महिना ${toNep(+d)} गते शुभम्।`
     : 'इति संवत् २०८___ साल ______ महिना ___ गते शुभम्।';
-  const officers = [
-    ['शाखा अधिकृत',   $('branchInput').value.trim()],
-    ['कम्प्युटर अपरेटर', $('operatorInput').value.trim()],
-  ].filter(x => x[1]).map(([t,n]) =>
-    `<p style="margin-top:28px">${t} — ${n}</p>`).join('');
   return `
   <article class="order">
     <p class="center">।।श्री।।</p>
@@ -272,7 +260,6 @@ function orderSheet(bench, row){
     <p class="center small">विरुद्ध</p>
     <p>${row.defendant}<span class="right">प्रतिवादी</span></p>
     <div class="body">यहाँ आदेश वा फैसलाको व्यहोरा लेख्नुहोस्।</div>
-    ${officers}
     <p class="right" style="clear:both;margin-top:32px">जिल्ला न्यायाधीश</p>
     <p style="clear:both;margin-top:32px">${dateLine}</p>
   </article>`;
@@ -280,7 +267,6 @@ function orderSheet(bench, row){
 
 function render(){
   const judge = $('judgeSelect').value;
-  const skip  = $('skipHeld').checked;
   const out   = $('output');
   out.innerHTML = '';
   const benches = state.benches.filter(b => b.judge === judge);
@@ -289,22 +275,55 @@ function render(){
     $('genStatus').className = 'status err';
     return;
   }
-  let shown = 0, skipped = 0;
+  let shown = 0;
   for (const bench of benches){
     for (const row of bench.rows){
-      if (skip && /हेर्न नभ्याइने|स्थगित|हेर्न नमिल्ने/.test(row.remark)){
-        skipped++; continue;
-      }
       out.insertAdjacentHTML('beforeend', orderSheet(bench, row));
       shown++;
     }
   }
   $('countText').textContent =
-    `${judge} · ${toNep(shown)} मुद्दाको आदेश फर्म्याट तयार` +
-    (skipped ? ` · ${toNep(skipped)} स्थगित/हेर्न नभ्याइने छोडियो` : '');
+    `${judge} · ${toNep(shown)} मुद्दाको आदेश फर्म्याट तयार। Word डाउनलोड थिचेर सेभ गर्नुहोस्।`;
   $('step3').hidden = false;
   $('toolbar').hidden = shown === 0;
   $('genStatus').textContent = '';
+}
+
+/* -------- Word (.doc) download -------- */
+function downloadWord(){
+  const docCss = `
+    @page { size: A4; margin: 1.5cm; }
+    body { font-family: 'Nirmala UI', Mangal, 'Noto Sans Devanagari', sans-serif;
+           font-size: 11pt; line-height: 1.8; }
+    .order { page-break-after: always; padding: 12pt 20pt; }
+    .center { text-align: center; }
+    .bold { font-weight: bold; }
+    h2 { text-align: center; text-decoration: underline; margin: 14pt 0;
+         font-size: 12pt; font-weight: bold; }
+    p { margin: 6pt 0; }
+    .body { min-height: 90pt; margin: 14pt 0; padding: 8pt;
+            border: 1px dashed #888; color: #555; }
+    .right { float: right; font-weight: bold; }
+    .small { font-size: 10pt; color: #555; }
+  `;
+  const bodyHtml = $('output').innerHTML;
+  const doc = `<html xmlns:o="urn:schemas-microsoft-com:office:office"
+    xmlns:w="urn:schemas-microsoft-com:office:word"
+    xmlns="http://www.w3.org/TR/REC-html40">
+    <head>
+      <meta charset="utf-8">
+      <title>आदेश ${toNep(state.date)}</title>
+      <style>${docCss}</style>
+    </head>
+    <body>${bodyHtml}</body></html>`;
+  const blob = new Blob(['\ufeff', doc], { type: 'application/msword;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'orders-' + (state.date || 'draft') + '.doc';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }
 
 function downloadHtml(){
